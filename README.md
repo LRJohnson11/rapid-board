@@ -25,7 +25,7 @@ Download or clone this repository to your local machine:
 
 ```bash
 git clone <repository-url>
-cd kicad-library-manager
+cd rapid-board
 ```
 
 ### Step 2: Run Setup
@@ -98,7 +98,7 @@ For brevity, the examples below use `kicad-lib`. Adjust for your platform as nee
 Download a component from EasyEDA and add it to your library:
 
 ```bash
-kicad-lib get C12345
+rb get C12345
 ```
 
 - `C12345` is an example LCSC part number
@@ -106,9 +106,9 @@ kicad-lib get C12345
 
 **Examples:**
 ```bash
-kicad-lib get C12345                    # Download both symbol and footprint
-kicad-lib get C12345 --type symbol      # Download only the symbol
-kicad-lib get C12345 --type footprint   # Download only the footprint
+rb get C12345                    # Download both symbol and footprint
+rb get C12345 --type symbol      # Download only the symbol
+rb get C12345 --type footprint   # Download only the footprint
 ```
 
 #### List Components
@@ -116,13 +116,13 @@ kicad-lib get C12345 --type footprint   # Download only the footprint
 Display all components in your library:
 
 ```bash
-kicad-lib list
+rb list
 ```
 
 Add `-v` or `--verbose` for detailed information:
 
 ```bash
-kicad-lib list --verbose
+rb list --verbose
 ```
 
 #### Get Component Info
@@ -130,7 +130,7 @@ kicad-lib list --verbose
 Show detailed information about a specific component:
 
 ```bash
-kicad-lib info C12345
+rb info C12345
 ```
 
 #### Delete a Component
@@ -138,13 +138,13 @@ kicad-lib info C12345
 Remove a component from the library:
 
 ```bash
-kicad-lib delete C12345
+rb delete C12345
 ```
 
 Add `--force` to skip the confirmation prompt:
 
 ```bash
-kicad-lib delete C12345 --force
+rb delete C12345 --force
 ```
 
 #### Run Diagnostics
@@ -152,7 +152,7 @@ kicad-lib delete C12345 --force
 Check your system configuration and environment:
 
 ```bash
-kicad-lib diagnostics
+rb diagnostics
 ```
 
 This will verify:
@@ -166,7 +166,7 @@ This will verify:
 Add `-v` for more detailed diagnostic information:
 
 ```bash
-kicad-lib diagnostics --verbose
+rb diagnostics --verbose
 ```
 
 #### Show Help
@@ -174,9 +174,9 @@ kicad-lib diagnostics --verbose
 Display help information:
 
 ```bash
-kicad-lib --help                  # General help
-kicad-lib get --help              # Help for the 'get' command
-kicad-lib delete --help           # Help for the 'delete' command
+rb --help                  # General help
+rb get --help              # Help for the 'get' command
+rb delete --help           # Help for the 'delete' command
 ```
 
 #### Enable Debug Mode
@@ -184,7 +184,7 @@ kicad-lib delete --help           # Help for the 'delete' command
 Run any command with debug logging:
 
 ```bash
-kicad-lib --debug get C12345
+rb --debug get C12345
 ```
 
 Or enable it permanently in `config.json`:
@@ -198,13 +198,13 @@ Or enable it permanently in `config.json`:
 ## Project Structure
 
 ```
-kicad-library-manager/
+rapid-board/
 ├── config.json              # Configuration file (created by setup)
 ├── setup.py                 # Setup script
 ├── requirements.txt         # Python dependencies
 ├── README.md               # This file
-├── kicad-lib               # CLI wrapper (Unix)
-├── kicad-lib.bat           # CLI wrapper (Windows)
+├── rb               # CLI wrapper (Unix)
+├── rb.bat           # CLI wrapper (Windows)
 ├── venv/                   # Virtual environment (created by setup)
 ├── library/                # Component library (created by setup)
 │   ├── C12345/            # Example component directory
@@ -265,7 +265,7 @@ The tool supports KiCad's hierarchical sheets naturally:
 Run diagnostics to check the installation:
 
 ```bash
-kicad-lib diagnostics
+rb diagnostics
 ```
 
 If easyeda2kicad is missing, try reinstalling:
@@ -279,7 +279,7 @@ If easyeda2kicad is missing, try reinstalling:
 On Unix systems, ensure the CLI wrapper is executable:
 
 ```bash
-chmod +x kicad-lib
+chmod +x rb
 ```
 
 ### Import Errors
@@ -295,7 +295,7 @@ python3 setup.py
 For detailed debugging information, enable debug mode:
 
 ```bash
-kicad-lib --debug <command>
+rb --debug <command>
 ```
 
 Or edit `config.json`:
@@ -385,7 +385,7 @@ Potential features for future versions:
 
 For issues, questions, or suggestions:
 - Open an issue on GitHub
-- Check the diagnostics: `kicad-lib diagnostics`
+- Check the diagnostics: `rb diagnostics`
 - Enable debug mode for more information
 
 ## Acknowledgments

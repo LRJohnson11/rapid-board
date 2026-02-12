@@ -187,8 +187,8 @@ def cmd_rebuild(args) -> int:
         print(utils.format_success(message))
         print("\nMaster library files created:")
         library_path = utils.get_library_path()
-        print(f"  Symbols:    {library_path}/kicad-library-manager.kicad_sym")
-        print(f"  Footprints: {library_path}/kicad-library-manager.pretty/")
+        print(f"  Symbols:    {library_path}/rapid-board-library-manager.kicad_sym")
+        print(f"  Footprints: {library_path}/rapid-board-library-manager.pretty/")
         return 0
     else:
         print(utils.format_error(message))
@@ -201,9 +201,9 @@ def main():
     """
     # Create main parser
     parser = argparse.ArgumentParser(
-        prog='kicad-lib',
+        prog='rb',
         description='KiCad Library Manager - Manage EasyEDA components for KiCad',
-        epilog='Use "kicad-lib <command> --help" for more information about a command.'
+        epilog='Use "rb <command> --help" for more information about a command.'
     )
     
     parser.add_argument(

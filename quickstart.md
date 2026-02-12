@@ -13,7 +13,7 @@ Follow the prompts to configure your library location and preferences.
 ## 2. Download a Component
 
 ```bash
-./kicad-lib get C12345
+./rb get C12345
 ```
 
 Replace `C12345` with any LCSC part number from EasyEDA.
@@ -21,31 +21,31 @@ Replace `C12345` with any LCSC part number from EasyEDA.
 ## 3. List Your Components
 
 ```bash
-./kicad-lib list
+./rb list
 ```
 
 ## Common Commands
 
 | Command | Description |
 |---------|-------------|
-| `./kicad-lib get <id>` | Download a component |
-| `./kicad-lib list` | Show all components |
-| `./kicad-lib info <id>` | Component details |
-| `./kicad-lib delete <id>` | Remove a component |
-| `./kicad-lib diagnostics` | System health check |
-| `./kicad-lib --help` | Show all commands |
+| `./rb get <id>` | Download a component |
+| `./rb list` | Show all components |
+| `./rb info <id>` | Component details |
+| `./rb delete <id>` | Remove a component |
+| `./rb diagnostics` | System health check |
+| `./rb --help` | Show all commands |
 
 ## Need Help?
 
-- Run `./kicad-lib diagnostics` to check your setup
+- Run `./rb diagnostics` to check your setup
 - See [README.md](README.md) for detailed documentation
-- Enable debug mode: `./kicad-lib --debug <command>`
+- Enable debug mode: `./rb --debug <command>`
 
 ## Windows Users
 
-Use `.\kicad-lib.bat` instead of `./kicad-lib`:
+Use `.\rb.bat` instead of `./rb`:
 
 ```bash
 python setup.py
-.\kicad-lib.bat get C12345
+.\rb.bat get C12345
 ```

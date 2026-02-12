@@ -281,10 +281,10 @@ def _rebuild_symbol_library(library_path: Path) -> Tuple[bool, str]:
     Returns:
         Tuple[bool, str]: (Success status, message)
     """
-    master_symbol_file = library_path / "kicad-library-manager.kicad_sym"
+    master_symbol_file = library_path / "rapid-board-library-manager.kicad_sym"
     
     # Start with KiCad symbol library header
-    library_content = ['(kicad_symbol_lib (version 20211014) (generator kicad-library-manager)\n']
+    library_content = ['(kicad_symbol_lib (version 20211014) (generator rapid-board-library-manager)\n']
     
     symbol_count = 0
     
@@ -341,7 +341,7 @@ def _rebuild_footprint_library(library_path: Path) -> Tuple[bool, str]:
     Returns:
         Tuple[bool, str]: (Success status, message)
     """
-    master_footprint_dir = library_path / "kicad-library-manager.pretty"
+    master_footprint_dir = library_path / "rapid-board-library-manager.pretty"
     
     # Create/clear the master footprint directory
     if master_footprint_dir.exists():
@@ -356,7 +356,7 @@ def _rebuild_footprint_library(library_path: Path) -> Tuple[bool, str]:
     
     # Iterate through all component directories
     for component_dir in sorted(library_path.iterdir()):
-        if not component_dir.is_dir() or component_dir.name == "kicad-library-manager.pretty":
+        if not component_dir.is_dir() or component_dir.name == "rapid-board-library-manager.pretty":
             continue
             
         # Look for footprint files

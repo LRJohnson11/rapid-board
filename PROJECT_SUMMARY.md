@@ -58,15 +58,15 @@ A command-line Python tool that wraps easyEDA2kicad to streamline PCB component 
 ### Project Structure
 
 ```
-kicad-library-manager/
+rb-library-manager/
 ├── README.md              # Comprehensive documentation
 ├── QUICKSTART.md          # Fast setup guide
 ├── config.json.example    # Configuration template
 ├── requirements.txt       # Python dependencies
 ├── setup.py              # Automated setup script
 ├── .gitignore            # Git exclusions
-├── kicad-lib             # CLI wrapper (Unix)
-├── kicad-lib.bat         # CLI wrapper (Windows)
+├── rb             # CLI wrapper (Unix)
+├── rb.bat         # CLI wrapper (Windows)
 ├── library/              # Component storage
 │   └── .gitkeep
 └── src/                  # Source code
