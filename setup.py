@@ -255,12 +255,12 @@ def create_cli_wrapper():
     project_root = get_project_root()
     
     if platform.system() == "Windows":
-        wrapper_path = project_root / "kicad-lib.bat"
+        wrapper_path = project_root / "rb.bat"
         wrapper_content = f"""@echo off
 "{get_venv_python()}" -m src.cli %*
 """
     else:
-        wrapper_path = project_root / "kicad-lib"
+        wrapper_path = project_root / "rb"
         wrapper_content = f"""#!/bin/bash
 "{get_venv_python()}" -m src.cli "$@"
 """
@@ -329,9 +329,9 @@ def print_usage_instructions():
     project_root = get_project_root()
     
     if platform.system() == "Windows":
-        cli_command = ".\\kicad-lib.bat"
+        cli_command = ".\\rb.bat"
     else:
-        cli_command = "./kicad-lib"
+        cli_command = "./rb"
     
     print("\n" + "="*60)
     print("  Setup Complete!")

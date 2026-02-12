@@ -8,6 +8,7 @@ import shutil
 from pathlib import Path
 from typing import List, Tuple, Optional
 import json
+import re
 
 from . import utils
 from . import easyeda_interface
@@ -69,6 +70,10 @@ def get_component(component_id: str, component_type: str = "both") -> Tuple[bool
             logging.warning(f"Failed to create metadata: {e}")
         
         logging.info(f"Successfully added component {component_id}")
+        
+        # Rebuild master libraries
+        rebuild_master_libraries()
+        
         return True, f"Component {component_id} added to library"
     else:
         # Clean up failed download directory if it was created
@@ -111,6 +116,10 @@ def delete_component(component_id: str) -> Tuple[bool, str]:
     try:
         shutil.rmtree(component_dir)
         logging.info(f"Successfully deleted component {component_id}")
+        
+        # Rebuild master libraries
+        rebuild_master_libraries()
+        
         return True, f"Component {component_id} removed from library"
     except Exception as e:
         error_msg = f"Failed to delete component {component_id}: {str(e)}"
@@ -220,3 +229,202 @@ def component_exists(component_id: str) -> bool:
     library_path = utils.get_library_path()
     component_dir = library_path / component_id
     return component_dir.exists() and component_dir.is_dir()
+
+
+def rebuild_master_libraries() -> Tuple[bool, str]:
+    """
+    Rebuild the master symbol and footprint library files from all components.
+    Creates consolidated library files that KiCad can easily import.
+    
+    Returns:
+        Tuple[bool, str]: (Success status, descriptive message)
+    """
+    logging.info("Rebuilding master library files...")
+    
+    library_path = utils.get_library_path()
+    
+    # Ensure library directory exists
+    if not library_path.exists():
+        return False, "Library directory does not exist"
+    
+    try:
+        # Rebuild symbol library
+        symbol_success, symbol_msg = _rebuild_symbol_library(library_path)
+        
+        # Rebuild footprint library
+        footprint_success, footprint_msg = _rebuild_footprint_library(library_path)
+        
+        if symbol_success and footprint_success:
+            logging.info("Master libraries rebuilt successfully")
+            return True, "Master libraries updated"
+        else:
+            messages = []
+            if not symbol_success:
+                messages.append(f"Symbol library: {symbol_msg}")
+            if not footprint_success:
+                messages.append(f"Footprint library: {footprint_msg}")
+            return False, "; ".join(messages)
+            
+    except Exception as e:
+        error_msg = f"Failed to rebuild master libraries: {str(e)}"
+        logging.error(error_msg)
+        return False, error_msg
+
+
+def _rebuild_symbol_library(library_path: Path) -> Tuple[bool, str]:
+    """
+    Rebuild the master symbol library file from all component symbols.
+    
+    Args:
+        library_path: Path to the library directory
+        
+    Returns:
+        Tuple[bool, str]: (Success status, message)
+    """
+    master_symbol_file = library_path / "kicad-library-manager.kicad_sym"
+    
+    # Start with KiCad symbol library header
+    library_content = ['(kicad_symbol_lib (version 20211014) (generator kicad-library-manager)\n']
+    
+    symbol_count = 0
+    
+    # Iterate through all component directories
+    for component_dir in sorted(library_path.iterdir()): ##FIXME The bug here is its looking at directories, but the kicad.sym is not stored in a library there
+        if not component_dir.is_dir():
+            continue
+            
+        # Look for symbol files
+        symbol_files = list(component_dir.glob("*.kicad_sym"))
+        
+        for symbol_file in symbol_files:
+            try:
+                with open(symbol_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    
+                # Extract symbol definitions (skip the header and footer)
+                # KiCad symbol files have format: (kicad_symbol_lib ... (symbol ...) ...)
+                # We want to extract just the (symbol ...) parts
+                symbol_defs = _extract_symbol_definitions(content)
+                
+                if symbol_defs:
+                    library_content.extend(symbol_defs)
+                    symbol_count += len(symbol_defs)
+                    logging.debug(f"Added {len(symbol_defs)} symbols from {symbol_file.name}")
+                    
+            except Exception as e:
+                logging.warning(f"Failed to process symbol file {symbol_file}: {e}")
+                continue
+    
+    # Close the library
+    library_content.append(')\n')
+    
+    # Write the master symbol library
+    try:
+        with open(master_symbol_file, 'w', encoding='utf-8') as f:
+            f.writelines(library_content)
+        
+        logging.info(f"Created master symbol library with {symbol_count} symbols")
+        return True, f"Symbol library created ({symbol_count} symbols)"
+        
+    except Exception as e:
+        return False, f"Failed to write symbol library: {str(e)}"
+
+
+def _rebuild_footprint_library(library_path: Path) -> Tuple[bool, str]:
+    """
+    Rebuild the master footprint library directory from all component footprints.
+    KiCad footprint libraries are directories containing .kicad_mod files.
+    
+    Args:
+        library_path: Path to the library directory
+        
+    Returns:
+        Tuple[bool, str]: (Success status, message)
+    """
+    master_footprint_dir = library_path / "kicad-library-manager.pretty"
+    
+    # Create/clear the master footprint directory
+    if master_footprint_dir.exists():
+        # Clear existing footprints but keep the directory
+        for item in master_footprint_dir.iterdir():
+            if item.is_file() and item.suffix == '.kicad_mod':
+                item.unlink()
+    else:
+        master_footprint_dir.mkdir(exist_ok=True)
+    
+    footprint_count = 0
+    
+    # Iterate through all component directories
+    for component_dir in sorted(library_path.iterdir()):
+        if not component_dir.is_dir() or component_dir.name == "kicad-library-manager.pretty":
+            continue
+            
+        # Look for footprint files
+        footprint_files = list(component_dir.glob("*.kicad_mod"))
+        
+        for footprint_file in footprint_files:
+            try:
+                # Create a unique footprint name using component ID
+                component_id = component_dir.name
+                new_footprint_name = f"{component_id}_{footprint_file.stem}.kicad_mod"
+                destination = master_footprint_dir / new_footprint_name
+                
+                # Copy the footprint file
+                shutil.copy2(footprint_file, destination)
+                footprint_count += 1
+                logging.debug(f"Copied footprint: {new_footprint_name}")
+                
+            except Exception as e:
+                logging.warning(f"Failed to copy footprint {footprint_file}: {e}")
+                continue
+    
+    logging.info(f"Created master footprint library with {footprint_count} footprints")
+    return True, f"Footprint library created ({footprint_count} footprints)"
+
+
+def _extract_symbol_definitions(content: str) -> List[str]:
+    """
+    Extract symbol definitions from a KiCad symbol library file.
+    
+    Args:
+        content: Content of a .kicad_sym file
+        
+    Returns:
+        List[str]: List of symbol definition strings
+    """
+    symbols = []
+    
+    # Find all (symbol ...) blocks
+    # We need to match balanced parentheses
+    depth = 0
+    current_symbol = []
+    in_symbol = False
+    
+    i = 0
+    while i < len(content):
+        # Look for "(symbol " pattern
+        if content[i:i+8] == "(symbol ":
+            in_symbol = True
+            depth = 1
+            current_symbol = ["(symbol "]
+            i += 8
+            continue
+        
+        if in_symbol:
+            current_symbol.append(content[i])
+            
+            if content[i] == '(':
+                depth += 1
+            elif content[i] == ')':
+                depth -= 1
+                
+                if depth == 0:
+                    # Complete symbol found
+                    symbol_text = ''.join(current_symbol)
+                    symbols.append(symbol_text + '\n')
+                    in_symbol = False
+                    current_symbol = []
+        
+        i += 1
+    
+    return symbols

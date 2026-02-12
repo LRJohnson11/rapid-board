@@ -169,6 +169,32 @@ def cmd_diagnostics(args) -> int:
     return 0 if all_passed else 1
 
 
+def cmd_rebuild(args) -> int:
+    """
+    Handle the 'rebuild' command to regenerate master library files.
+    
+    Args:
+        args: Parsed command line arguments
+        
+    Returns:
+        int: Exit code (0 for success, 1 for failure)
+    """
+    print("Rebuilding master library files...")
+    
+    success, message = component_manager.rebuild_master_libraries()
+    
+    if success:
+        print(utils.format_success(message))
+        print("\nMaster library files created:")
+        library_path = utils.get_library_path()
+        print(f"  Symbols:    {library_path}/kicad-library-manager.kicad_sym")
+        print(f"  Footprints: {library_path}/kicad-library-manager.pretty/")
+        return 0
+    else:
+        print(utils.format_error(message))
+        return 1
+
+
 def main():
     """
     Main entry point for the CLI.
@@ -266,6 +292,13 @@ def main():
         help='Show additional diagnostic information'
     )
     parser_diag.set_defaults(func=cmd_diagnostics)
+    
+    # Rebuild command
+    parser_rebuild = subparsers.add_parser(
+        'rebuild',
+        help='Rebuild master library files from all components'
+    )
+    parser_rebuild.set_defaults(func=cmd_rebuild)
     
     # Parse arguments
     args = parser.parse_args()
