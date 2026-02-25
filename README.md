@@ -394,3 +394,6 @@ This tool wraps and depends on:
 - [easyeda2kicad](https://github.com/uPesy/easyeda2kicad) - For converting EasyEDA components to KiCad format
 - [KiCad](https://www.kicad.org/) - The amazing open-source PCB design software
 - [EasyEDA](https://easyeda.com/) - For providing the component library
+
+## Contributing
+- when contributing, please put all changes in a branch and make a pull request.
