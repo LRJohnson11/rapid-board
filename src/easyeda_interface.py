@@ -17,15 +17,18 @@ def check_easyeda2kicad_installed() -> bool:
     Returns:
         bool: True if easyEDA2kicad is available, False otherwise
     """
+    print(f"checking if easyeda2kicad is installed")
     try:
         result = subprocess.run(
-            ['easyeda2kicad', '--version'],
+            "easyeda2kicad --version",
+            shell=True,
             capture_output=True,
             text=True,
             timeout=5
         )
+        output = result.stdout + result.stderr
         logging.debug(f"easyEDA2kicad version check: {result.stdout}, returnCode: {result.returncode}")
-        return True #I know this is hardcoded, but it throws an error when version gets checked.
+        return (("easyeda2kicad" in output) and ("v" in output))
     except (subprocess.SubprocessError, FileNotFoundError) as e:
         logging.debug(f"easyEDA2kicad not found: {e}")
         return False
@@ -69,9 +72,10 @@ def download_component(component_id: str, output_dir: Path, component_type: str 
     """
     if not check_easyeda2kicad_installed():
         return False, "easyEDA2kicad is not installed or not accessible"
-    
+
     # Ensure output directory exists
     output_dir.mkdir(parents=True, exist_ok=True)
+    outfilesLoc = output_dir / component_id
     
     try:
         logging.debug(f"Downloading component {component_id} to {output_dir}")
@@ -81,7 +85,7 @@ def download_component(component_id: str, output_dir: Path, component_type: str 
         cmd = [
             'easyeda2kicad',
             '--lcsc_id', component_id,
-            '--output', str(output_dir),
+            '--output', str(outfilesLoc),
             '--overwrite'
         ]
         
