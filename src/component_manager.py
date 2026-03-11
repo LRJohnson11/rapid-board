@@ -45,7 +45,7 @@ def get_component(component_id: str, component_type: str = "both") -> Tuple[bool
     if component_dir.exists():
         logging.warning(f"Component {component_id} already exists in library")
         return False, f"Component {component_id} already exists. Use delete first to replace."
-    
+    print(f"downloading...")
     # Download the component
     success, message = easyeda_interface.download_component(
         component_id, 
@@ -60,15 +60,7 @@ def get_component(component_id: str, component_type: str = "both") -> Tuple[bool
             "component_type": component_type,
             "added_date": utils.get_current_timestamp()
         }
-        
-        metadata_path = component_dir / "metadata.json"
-        try:
-            with open(metadata_path, 'w') as f:
-                json.dump(metadata, f, indent=2)
-            logging.debug(f"Created metadata file: {metadata_path}")
-        except Exception as e:
-            logging.warning(f"Failed to create metadata: {e}")
-        
+        _updateDirectory(component_id, library_path)
         logging.info(f"Successfully added component {component_id}")
         
         # Rebuild master libraries
@@ -289,14 +281,17 @@ def _rebuild_symbol_library(library_path: Path) -> Tuple[bool, str]:
     symbol_count = 0
     
     # Iterate through all component directories
-    for component_dir in sorted(library_path.iterdir()): ##FIXME The bug here is its looking at directories, but the kicad.sym is not stored in a library there
+    for component_dir in sorted(library_path.iterdir()):
         if not component_dir.is_dir():
             continue
             
         # Look for symbol files
         symbol_files = list(component_dir.glob("*.kicad_sym"))
+        component_id =component_dir.name
+        print(component_id)
         
         for symbol_file in symbol_files:
+            
             try:
                 with open(symbol_file, 'r', encoding='utf-8') as f:
                     content = f.read()
@@ -304,7 +299,7 @@ def _rebuild_symbol_library(library_path: Path) -> Tuple[bool, str]:
                 # Extract symbol definitions (skip the header and footer)
                 # KiCad symbol files have format: (kicad_symbol_lib ... (symbol ...) ...)
                 # We want to extract just the (symbol ...) parts
-                symbol_defs = _extract_symbol_definitions(content)
+                symbol_defs = _extract_symbol_definitions(content, component_id)
                 
                 if symbol_defs:
                     library_content.extend(symbol_defs)
@@ -346,7 +341,7 @@ def _rebuild_footprint_library(library_path: Path) -> Tuple[bool, str]:
     # Create/clear the master footprint directory
     if master_footprint_dir.exists():
         # Clear existing footprints but keep the directory
-        for item in master_footprint_dir.iterdir():
+        for item in master_footprint_dir.iterdir(): #FIXME why are we deleting everything out if we're just gonna add it back?
             if item.is_file() and item.suffix == '.kicad_mod':
                 item.unlink()
     else:
@@ -360,29 +355,34 @@ def _rebuild_footprint_library(library_path: Path) -> Tuple[bool, str]:
             continue
             
         # Look for footprint files
-        footprint_files = list(component_dir.glob("*.kicad_mod"))
         
-        for footprint_file in footprint_files:
-            try:
-                # Create a unique footprint name using component ID
-                component_id = component_dir.name
-                new_footprint_name = f"{component_id}_{footprint_file.stem}.kicad_mod"
-                destination = master_footprint_dir / new_footprint_name
+        footprint_folders = list(component_dir.glob("*.pretty"))
+        print(f"{footprint_folders}")
+        
+        for footprint_folder in footprint_folders:
+            footprint_files = list(footprint_folder.glob("*.kicad_mod"))
+            for file in footprint_files:
+
+                try:
+                    # Create a unique footprint name using component ID
+                    component_id = component_dir.name
+                    new_footprint_name = f"{component_id}_{file.stem}.kicad_mod"
+                    destination = master_footprint_dir / new_footprint_name
                 
                 # Copy the footprint file
-                shutil.copy2(footprint_file, destination)
-                footprint_count += 1
-                logging.debug(f"Copied footprint: {new_footprint_name}")
+                    shutil.copy2(file, destination)
+                    footprint_count += 1
+                    logging.debug(f"Copied footprint: {new_footprint_name}")
                 
-            except Exception as e:
-                logging.warning(f"Failed to copy footprint {footprint_file}: {e}")
-                continue
+                except Exception as e:
+                    logging.warning(f"Failed to copy footprint {footprint_file}: {e}")
+                    continue
     
     logging.info(f"Created master footprint library with {footprint_count} footprints")
     return True, f"Footprint library created ({footprint_count} footprints)"
 
 
-def _extract_symbol_definitions(content: str) -> List[str]:
+def _extract_symbol_definitions(content: str, component_id: str) -> List[str]:
     """
     Extract symbol definitions from a KiCad symbol library file.
     
@@ -399,11 +399,13 @@ def _extract_symbol_definitions(content: str) -> List[str]:
     depth = 0
     current_symbol = []
     in_symbol = False
+
     
     i = 0
     while i < len(content):
         # Look for "(symbol " pattern
-        if content[i:i+8] == "(symbol ":
+        #if we find the start of a symbol and we aren't already in one
+        if (content[i:i+8] == "(symbol ") and (in_symbol == False):
             in_symbol = True
             depth = 1
             current_symbol = ["(symbol "]
@@ -426,5 +428,28 @@ def _extract_symbol_definitions(content: str) -> List[str]:
                     current_symbol = []
         
         i += 1
-    
+
+    symbols = _amendFootprintName(symbols, component_id)
     return symbols
+
+
+def _updateDirectory(componentId, libraryPath: Path):
+    directoryPath = libraryPath / "Directory.txt"
+    if not directoryPath.exists():
+        with open(directoryPath, mode='w', encoding='utf-8') as f:
+            f.write(f"{componentId}\n")
+            f.close()
+    else:
+        with open(directoryPath, mode="a", encoding="utf-8") as f:
+            f.write(f"{componentId}\n")
+            f.close()
+
+    logging.info("updated part directory")
+
+def _amendFootprintName(symbols: List, component_id):
+    content = "".join(symbols)
+
+    pattern = r'(property\s+"Footprint"\s+")[^":]+:'
+    replacement = r'\1' + f"rapid_board_lib:{component_id}_"
+    amended_content = re.sub(pattern, replacement, content)
+    return list(amended_content)
