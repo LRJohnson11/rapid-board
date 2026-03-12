@@ -1,4 +1,4 @@
-# KiCad Library Manager
+# Rapid Board Library Manager
 
 A command-line tool for managing EasyEDA components in KiCad projects. This tool simplifies the process of downloading, organizing, and maintaining a shared component library that works across multiple KiCad projects.
 
@@ -76,6 +76,16 @@ You can manually edit this file to change settings:
 ## Usage
 
 After setup, you can use the tool with the `kicad-lib` command wrapper.
+
+### Step 4
+
+## setting up Kicad to interface with Rapid Board
+
+Rapid board constructs a global library, but in order for KiCad to use the library, it needs to know about it. 
+
+After opening Kicad, open preferences and select `Manage Symbol Libary`. scroll to the bottom of the table and add a new row. name the row `rapid_board_lib`, and make sure to provide the absolute path to `{library path}/rapid-board-library-manager.kicad_sym`
+
+repeat this process for `Manage Footprint Library`, but set the aboslute path to be `{library path}/rapid-board-library-manager.pretty`.
 
 ### Running Commands
 
