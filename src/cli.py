@@ -193,6 +193,15 @@ def cmd_rebuild(args) -> int:
     else:
         print(utils.format_error(message))
         return 1
+    
+def cmd_extract(args) -> int:
+    """
+    Args: 
+        args: Parsed command line arguments
+    Returns:
+        int: Exit code (0 for success, 1 for failure)
+    """
+    print(f"extracting rapid board components used in project")
 
 
 def main():
@@ -215,7 +224,7 @@ def main():
     parser.add_argument(
         '--version',
         action='version',
-        version='KiCad Library Manager v1.0.0'
+        version='Rapid Board Library Manager v1.0.0'
     )
     
     # Create subparsers for commands
@@ -225,7 +234,7 @@ def main():
         help='Available commands'
     )
     
-    # Get command
+    ####### Get command
     parser_get = subparsers.add_parser(
         'get',
         help='Download and add a component to the library'
@@ -242,7 +251,7 @@ def main():
     )
     parser_get.set_defaults(func=cmd_get)
     
-    # Delete command
+    ####### Delete command
     parser_delete = subparsers.add_parser(
         'delete',
         help='Remove a component from the library'
@@ -258,7 +267,7 @@ def main():
     )
     parser_delete.set_defaults(func=cmd_delete)
     
-    # List command
+    ####### List command
     parser_list = subparsers.add_parser(
         'list',
         help='List all components in the library'
@@ -270,7 +279,7 @@ def main():
     )
     parser_list.set_defaults(func=cmd_list)
     
-    # Info command
+    ######## Info command
     parser_info = subparsers.add_parser(
         'info',
         help='Show detailed information about a specific component'
@@ -281,7 +290,7 @@ def main():
     )
     parser_info.set_defaults(func=cmd_info)
     
-    # Diagnostics command
+    ######## Diagnostics command
     parser_diag = subparsers.add_parser(
         'diagnostics',
         help='Run system health checks'
@@ -293,12 +302,20 @@ def main():
     )
     parser_diag.set_defaults(func=cmd_diagnostics)
     
-    # Rebuild command
+    ####### Rebuild command
     parser_rebuild = subparsers.add_parser(
         'rebuild',
         help='Rebuild master library files from all components'
     )
     parser_rebuild.set_defaults(func=cmd_rebuild)
+    
+    ####### Extract command
+    parser_extract = subparsers.add_parser(
+        'extract',
+        help='extract all rapid board components from a provided project file'
+    )
+    parser_extract.set_defaults(func=cmd_extract)
+
     
     # Parse arguments
     args = parser.parse_args()
